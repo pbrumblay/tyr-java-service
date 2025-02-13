@@ -1,0 +1,47 @@
+# cloudbuild.yaml
+steps:
+  - name: 'gradle:8-jdk17'
+    entrypoint: gradle
+    args: ['build']  
+    id: 'build-and-test-app'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA',
+      '--build-arg', 'JAR_FILE=build/libs/*.jar',
+      '.'
+    ]
+    id: 'build-container-image'
+
+  # Create Cloud Deploy release
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'deploy'
+      - 'releases'
+      - 'create'
+      - 'rel-${SHORT_SHA}'
+      - '--delivery-pipeline=${_SERVICE_NAME}-pipeline'
+      - '--region=${_REGION}'
+      - '--annotations=commit_sha=${REVISION_ID},build_id=$BUILD_ID'
+      - '--labels=env=dev'
+      - '--source=.'  # Directory containing skaffold.yaml
+    id: 'create-deploy-release'
+
+# Build timeout
+timeout: '300s'  
+
+# Specify the images to push
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+
+substitutions:
+  _REGION: 'us-central1'  
+  _SERVICE_NAME: 'tyr-java-service'
+  _REPOSITORY: 'applications'
+
+# Configure artifact caching for Gradle
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
