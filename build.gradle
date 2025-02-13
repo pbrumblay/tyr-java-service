@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.tyrconsulting'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'  
 
 java {
 	toolchain {
@@ -29,4 +29,46 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+def getGitHash() {
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+def buildVersion = "${version}-${getGitHash()}"
+
+tasks.jar {
+    // Disable the plain jar
+    enabled = false
+}
+
+tasks.register('fatJar', Jar) {
+    archiveClassifier = '' // This removes any classifier like 'plain'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    from sourceSets.main.output
+    from {
+        configurations.runtimeClasspath.collect { 
+            it.isDirectory() ? it : zipTree(it) 
+        }
+    }
+    
+    manifest {
+        attributes 'Main-Class': 'com.tyrconsulting.tyrjavarest.Application'
+    }
+}
+
+tasks.withType(Jar) {
+    manifest {
+        attributes(
+            'Implementation-Version': buildVersion,
+            'Git-Commit': getGitHash(),
+            'Build-Time': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        )
+    }
 }
