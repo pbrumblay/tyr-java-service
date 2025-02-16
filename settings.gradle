@@ -3,7 +3,4 @@ buildCache {
     local {
         enabled = true
     }
-    remote {
-        enabled = false  // We're just using local cache for Cloud Build
-    }
 }
