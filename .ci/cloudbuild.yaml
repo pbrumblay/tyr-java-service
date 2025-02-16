@@ -9,7 +9,7 @@ steps:
       - cp
       - -r
       - 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*'
-      - '/root/.gradle/'
+      - '.gradle/'
     id: 'restore-gradle-cache'
 
   - name: 'gradle:8-jdk17'
@@ -30,7 +30,7 @@ steps:
       - rsync
       - -r
       - -d
-      - '/root/.gradle/'
+      - '.gradle/'
       - 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/'
     id: 'save-gradle-cache'    
 
