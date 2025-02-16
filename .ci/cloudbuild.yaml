@@ -30,7 +30,8 @@ steps:
     args:
       - '-c'
       - |
-        git clone https://$(gcloud secrets versions access latest --secret="${_GITHUB_SECRET}")/${_PLATFORM_REPO} && \
+        GITHUB_PAT=$(gcloud secrets versions access latest --secret="${_GITHUB_SECRET}") && \
+        git clone https:///$GITHUB_PAT@${_PLATFORM_REPO} && \
         gcloud deploy releases create release-${SHORT_SHA} \
         --delivery-pipeline=${_SERVICE_NAME}-pipeline \
         --region=${_REGION} \
