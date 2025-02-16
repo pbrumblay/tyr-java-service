@@ -2,17 +2,13 @@
 steps:
   # Restore cached Gradle dependencies
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: /bin/sh
+    entrypoint: gsutil
     args:
-      - -c
-      - |
-        echo "Restoring Gradle cache..."
-        gcloud artifacts cache read gradle-cache-${_SERVICE_NAME} \
-          --location=${_REGION} \
-          --project=$PROJECT_ID \
-          --format=docker \
-          --tag=latest \
-          --output-dir=/root/.gradle || echo "No cache found."
+      - -m
+      - cp
+      - -r
+      - 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*'
+      - '/root/.gradle/'
     id: 'restore-gradle-cache'
 
   - name: 'gradle:8-jdk17'
@@ -27,18 +23,14 @@ steps:
     id: 'build-and-test-app'
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: /bin/sh
+    entrypoint: gsutil
     args:
-      - -c
-      - |
-        echo "Saving Gradle cache..."
-        tar czf /tmp/gradle-cache.tgz -C /root/.gradle .
-        gcloud artifacts cache write gradle-cache-${_SERVICE_NAME} \
-          --location=${_REGION} \
-          --project=$PROJECT_ID \
-          --format=docker \
-          --tag=latest \
-          --input-file=/tmp/gradle-cache.tgz
+      - -m
+      - rsync
+      - -r
+      - -d
+      - '/root/.gradle/'
+      - 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/'
     id: 'save-gradle-cache'    
 
   - name: 'gcr.io/cloud-builders/docker'
