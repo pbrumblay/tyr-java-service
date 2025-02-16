@@ -3,10 +3,13 @@ steps:
   # Restore cached Gradle dependencies
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     allowFailure: true
-    script: |
-      #!/usr/bin/env bash
-      mkdir .gradle
-      gsutil -m cp -r 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*' '.gradle/'
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+        #!/usr/bin/env bash
+        mkdir .gradle
+        gsutil -m cp -r 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*' '.gradle/'
     id: 'restore-gradle-cache'
 
   - name: 'gradle:8-jdk17'
