@@ -1,41 +1,16 @@
 # cloudbuild.yaml
 steps:
-  # Restore cached Gradle dependencies
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    allowFailure: true
-    entrypoint: /bin/bash
-    args:
-      - '-c'
-      - |
-        #!/usr/bin/env bash
-        mkdir -p /workspace/.gradle
-        gsutil -m cp -r 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*' '/workspace/.gradle/'
-    id: 'restore-gradle-cache'
-
   - name: 'gradle:8-jdk17'
     entrypoint: gradle
     env: 
       - 'GRADLE_USER_HOME=/workspace/.gradle'
     args:
       - '--no-daemon'
-      - '--build-cache'
       - '--parallel'
       - '--console=plain'
       - '--info'
       - 'build'      
     id: 'build-and-test-app'
-
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gsutil
-    args:
-      - -m
-      - rsync
-      - -r
-      - -d
-      - '/workspace/.gradle/'
-      - 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/'
-    id: 'save-gradle-cache'    
-
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
