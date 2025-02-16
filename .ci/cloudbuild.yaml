@@ -38,7 +38,7 @@ steps:
         --annotations=commit_sha=${REVISION_ID},build_id=$BUILD_ID \
         --labels=env=dev \
         --source=tyr-platform/apps/${_SERVICE_NAME}/ \
-        --images=myapp=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}
+        --images=${_SERVICE_NAME}=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}
     id: 'create-deploy-release'
     waitFor:
     - build-container-image
