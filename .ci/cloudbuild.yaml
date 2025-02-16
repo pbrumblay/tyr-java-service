@@ -2,6 +2,7 @@
 steps:
   # Restore cached Gradle dependencies
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    allowFailure: true
     entrypoint: gsutil
     args:
       - -m
