@@ -1,18 +1,58 @@
 # cloudbuild.yaml
 steps:
+  # Restore cached Gradle dependencies
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        echo "Restoring Gradle cache..."
+        gcloud artifacts cache read gradle-cache-${_SERVICE_NAME} \
+          --location=${_REGION} \
+          --project=$PROJECT_ID \
+          --format=docker \
+          --tag=latest \
+          --output-dir=/root/.gradle || echo "No cache found."
+    id: 'restore-gradle-cache'
+
   - name: 'gradle:8-jdk17'
     entrypoint: gradle
-    args: ['build']  
+    args:
+      - '--no-daemon'
+      - '--build-cache'
+      - '--parallel'
+      - '--console=plain'
+      - '--info'
+      - 'build'      
     id: 'build-and-test-app'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        echo "Saving Gradle cache..."
+        tar czf /tmp/gradle-cache.tgz -C /root/.gradle .
+        gcloud artifacts cache write gradle-cache-${_SERVICE_NAME} \
+          --location=${_REGION} \
+          --project=$PROJECT_ID \
+          --format=docker \
+          --tag=latest \
+          --input-file=/tmp/gradle-cache.tgz
+    id: 'save-gradle-cache'    
 
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
       '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA',
+      '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:latest',
       '--build-arg', 'JAR_FILE=build/libs/*.jar',
+      '--cache-from', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:latest',
       '.'
     ]
     id: 'build-container-image'
+    waitFor:
+    - build-and-test-app
 
   # Create Cloud Deploy release
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -21,7 +61,7 @@ steps:
       - 'deploy'
       - 'releases'
       - 'create'
-      - 'rel-${SHORT_SHA}'
+      - 'release-${SHORT_SHA}'
       - '--delivery-pipeline=${_SERVICE_NAME}-pipeline'
       - '--region=${_REGION}'
       - '--annotations=commit_sha=${REVISION_ID},build_id=$BUILD_ID'
@@ -29,13 +69,16 @@ steps:
       - '--source=.'  # Directory containing skaffold.yaml
       - '--images=myapp=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}'
     id: 'create-deploy-release'
+    waitFor:
+    - build-container-image
 
 # Build timeout
-timeout: '300s'  
+timeout: '600s'  
 
 # Specify the images to push
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:latest'
 
 substitutions:
   _REGION: 'us-central1'  
