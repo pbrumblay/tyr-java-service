@@ -8,12 +8,14 @@ steps:
       - '-c'
       - |
         #!/usr/bin/env bash
-        mkdir .gradle
-        gsutil -m cp -r 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*' '.gradle/'
+        mkdir -p /workspace/.gradle
+        gsutil -m cp -r 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/*' '/workspace/.gradle/'
     id: 'restore-gradle-cache'
 
   - name: 'gradle:8-jdk17'
     entrypoint: gradle
+    env: 
+      - 'GRADLE_USER_HOME=/workspace/.gradle'
     args:
       - '--no-daemon'
       - '--build-cache'
@@ -30,7 +32,7 @@ steps:
       - rsync
       - -r
       - -d
-      - '.gradle/'
+      - '/workspace/.gradle/'
       - 'gs://${PROJECT_ID}-gradle-cache/${_SERVICE_NAME}.gradle/'
     id: 'save-gradle-cache'    
 
