@@ -26,18 +26,18 @@ steps:
 
   # Create Cloud Deploy release
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
+    entrypoint: /bin/bash'gcloud'
     args:
-      - 'deploy'
-      - 'releases'
-      - 'create'
-      - 'release-${SHORT_SHA}'
-      - '--delivery-pipeline=${_SERVICE_NAME}-pipeline'
-      - '--region=${_REGION}'
-      - '--annotations=commit_sha=${REVISION_ID},build_id=$BUILD_ID'
-      - '--labels=env=dev'
-      - '--source=.'  # Directory containing skaffold.yaml
-      - '--images=myapp=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}'
+      - '-c'
+      - |
+        git clone https://$(gcloud secrets versions access latest --secret="${_GITHUB_SECRET}")/${_PLATFORM_REPO} && \
+        gcloud deploy releases create release-${SHORT_SHA} \
+        --delivery-pipeline=${_SERVICE_NAME}-pipeline \
+        --region=${_REGION} \
+        --annotations=commit_sha=${REVISION_ID},build_id=$BUILD_ID \
+        --labels=env=dev \
+        --source=tyr-platform/apps/${_SERVICE_NAME}/' \
+        --images=myapp=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}
     id: 'create-deploy-release'
     waitFor:
     - build-container-image
@@ -54,6 +54,8 @@ substitutions:
   _REGION: 'us-central1'  
   _SERVICE_NAME: 'tyr-java-service'
   _REPOSITORY: 'applications'
+  _PLATFORM_REPO: 'github.com/pbrumblay/tyr-platform.git'
+  _GITHUB_SECRET: 'github-pat'
 
 # Configure artifact caching for Gradle
 options:
