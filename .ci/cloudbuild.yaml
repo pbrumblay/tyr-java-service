@@ -1,5 +1,6 @@
 # cloudbuild.yaml
 steps:
+  # Gradle build & test
   - name: 'gradle:8-jdk17'
     entrypoint: gradle
     env: 
@@ -11,6 +12,8 @@ steps:
       - '--info'
       - 'build'      
     id: 'build-and-test-app'
+
+   # Docker build
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
