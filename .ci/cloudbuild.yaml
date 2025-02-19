@@ -12,6 +12,7 @@ steps:
       - '--console=plain'
       - '--info'
       - '-PmavenRepoUrl=https://maven-central.storage-download.googleapis.com/maven2/'
+      - '-PgradlePluginPortalUrl=https://maven-central.storage-download.googleapis.com/maven2/'
       - 'build'      
     id: 'build-and-test-app'
 
