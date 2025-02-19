@@ -14,7 +14,12 @@ java {
 }
 
 repositories {
-	mavenCentral()
+    maven {
+        url project.findProperty('mavenRepoUrl') ?: 'https://repo.maven.apache.org/maven2/'
+    }
+    gradlePluginPortal {
+        url = project.findProperty('gradlePluginPortalUrl') ?: 'https://plugins.gradle.org/m2'
+    }
 }
 
 dependencies {
