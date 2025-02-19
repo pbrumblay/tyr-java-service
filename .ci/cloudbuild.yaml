@@ -5,6 +5,7 @@ steps:
     entrypoint: gradle
     env: 
       - 'GRADLE_USER_HOME=/workspace/.gradle'
+      - 'MAVEN_REPO_URL=https://maven-central.storage-download.googleapis.com/maven2/'
     args:
       - '--no-daemon'
       - '--parallel'
@@ -28,7 +29,7 @@ steps:
     - build-and-test-app
 
   # Create Cloud Deploy release
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     entrypoint: /bin/bash
     args:
       - '-c'
