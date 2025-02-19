@@ -15,7 +15,9 @@ java {
 
 repositories {
     maven {
-        url project.findProperty('mavenRepoUrl') ?: 'https://repo.maven.apache.org/maven2/'
+        def repoUrl = project.findProperty('mavenRepoUrl') ?: 'https://repo.maven.apache.org/maven2/'
+        println "Using Maven repository URL: ${repoUrl}"
+        url repoUrl
     }
     gradlePluginPortal {
         url = project.findProperty('gradlePluginPortalUrl') ?: 'https://plugins.gradle.org/m2'
