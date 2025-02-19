@@ -5,14 +5,12 @@ steps:
     entrypoint: gradle
     env: 
       - 'GRADLE_USER_HOME=/workspace/.gradle'
-      - 'GRADLE_PLUGIN_PORTAL_URL=https://maven-central.storage-download.googleapis.com/maven2/'
     args:
       - '--no-daemon'
       - '--parallel'
       - '--console=plain'
       - '--info'
       - '-PmavenRepoUrl=https://maven-central.storage-download.googleapis.com/maven2/'
-      - '-PgradlePluginPortalUrl=https://maven-central.storage-download.googleapis.com/maven2/'
       - 'build'      
     id: 'build-and-test-app'
 
